@@ -51,11 +51,12 @@ def step(cmd, msg=None, **kwargs):
 	# Replace the "cmd" template vars with all template vars passed in
 	# through kwarges.
 	#-----------------------------------------------------------------------
-	"""
 	if "template_vars" in kwargs:
-		for template_var in kwargs:
-			cmd
-	"""
+		for template_var_name, template_var_info  in kwargs["template_vars"].items():
+			cmd = cmd.replace(
+				"<%" + template_var_name + "%>",
+				str(template_var_info["value"])
+			) 
 	#-----------------------------------------------------------------------
 	# Save the response and command so we can return it in case we want to
 	# use it for something else.

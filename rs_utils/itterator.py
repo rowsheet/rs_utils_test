@@ -9,7 +9,7 @@ class _RSIProcess:
 
 	rs_step_cmd = None
 	rs_step_msg = None
-	rs_step_args = None
+	rs_step_args = {} 
 
 	step = None
 	step_args = {} 
@@ -27,7 +27,7 @@ class _RSIProcess:
 		rs_step_msg = None,
 		rs_step_args = {},
 		step = None,
-		step_args = None,
+		step_args = {},
 		next_process = None,
 		require_confirmation = None,
 		stop_on_error = True,
@@ -145,7 +145,7 @@ class Itterator:
 			step = process["step"]
 				if "step" in process else None,
 			step_args = process["step_args"]
-				if "step_args" in process else None,
+				if "step_args" in process else {},
 			# specify next process.
 			next_process = process["next_process"] 
 				if "next_process" in process else None,
@@ -220,6 +220,8 @@ class Itterator:
 			if next_process is None:
 				logger.message("All processes complete.")
 				return False
+
+			# Find the next process with matching conditions.
 			for process_name, conditions in next_process.items():
 				false_condition = False
 				for condition, value in conditions.items():
@@ -227,6 +229,18 @@ class Itterator:
 						false_condition = True
 				if false_condition == False:
 					self.target_process = self.processes[process_name]
+
+			# Populate the target_process template_values at runtime.
+			if self.target_process.rs_step_args is not None:
+				rs_step_args = self.target_process.rs_step_args
+				if "template_vars" in rs_step_args:
+					template_vars = rs_step_args["template_vars"]
+					for template_var_name, template_var_info in template_vars.items():
+						from_step = template_var_info["from_step"]
+						step_process = self.target_process_responses[from_step]
+						data_key = template_var_info["data_key"]
+						value = step_process.DATA[data_key]
+						self.target_process.rs_step_args["template_vars"][template_var_name]["value"] = value
 
 # Unit test.
 if __name__ == "__main__":

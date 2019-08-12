@@ -7,3 +7,4 @@ class Response:
 	SUCCESS = None 
 	ERROR = None 
 	ERROR_MSG = None
+	DATA = None
