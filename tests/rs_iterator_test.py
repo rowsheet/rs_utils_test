@@ -16,7 +16,6 @@ def POPULATE_FILE_STEP_ONE(**kwargs):
 		with open(filename, "a") as f:
 			for i in range(10):
 				f.write("Populating line: " + str(i) + "\n")
-
 		response.ERROR = False
 		return response
 	except Exception as ex:
