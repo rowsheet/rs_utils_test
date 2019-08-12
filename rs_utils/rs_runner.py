@@ -1,5 +1,5 @@
 from rs_utils import rs_logger
-import subprocess
+from subprocess import PIPE, Popen
 
 def step(cmd, msg=None, **kwargs):
 	#-----------------------------------------------------------------------
@@ -79,14 +79,14 @@ def step(cmd, msg=None, **kwargs):
 		rs_logger.debug(cmd)
 
 	#-----------------------------------------------------------------------
-	# Run the subprocess.
+	# Run the command.
 	#-----------------------------------------------------------------------
-	process = subprocess.Popen(
-		cmd.split(), # Split the commands so subprocess can run it.
-		stdout=subprocess.PIPE, # Pipe stdout so we can read it.
-		stderr=subprocess.PIPE # Pipe stderr so we can read it.
+	process = Popen(
+		cmd,
+		shell=True,
+		stdout=PIPE, # Pipe stdout so we can read it.
+		stderr=PIPE # Pipe stderr so we can read it.
 	)
-	process.wait() # Wait for the command to finish.
 	stdout, stderr = process.communicate()
 	# Check the returncode. If it's not zero, stderr should exist so
 	# show the message in red.

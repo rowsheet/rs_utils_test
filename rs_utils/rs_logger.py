@@ -1,4 +1,4 @@
-from termcolor import cprint
+from termcolor import colored, cprint
 import math
 
 def _warning(msg):
@@ -6,6 +6,9 @@ def _warning(msg):
 
 def _error(msg):
 	cprint(msg, "red")
+
+def _error_bold(msg):
+	print(colored(msg, 'white', 'on_red', attrs=['bold']))
 
 def _debug(msg):
 	cprint(msg, "cyan")
@@ -15,6 +18,9 @@ def _success(msg):
 
 def _message(msg):
 	cprint(msg, "white", "on_blue")
+
+def _message_bold(msg):
+	print(colored(msg, attrs=['reverse', 'bold']))
 
 def _print_line(msg,
 		print_method,
@@ -82,6 +88,22 @@ def error(msg,
 	):
 	_print_line(msg, _error, line, line_count, line_char, pad_top, pad_bottom, pad)
 
+def error_bold(msg,
+		line=False,
+		line_count=80,
+		line_char="-",
+		pad_top=False,
+		pad_bottom=False,
+		pad=False
+	):
+	_print_line(msg, _error_bold, line, line_count, line_char, pad_top, pad_bottom, pad)
+
+def error_big(msg_array):
+	error_bold("", line=True, line_char=" ")
+	for msg in msg_array:
+		error_bold(msg, line=True, line_char=" ")
+	error_bold("", line=True, line_char=" ")
+
 def debug(msg,
 		line=False,
 		line_count=80,
@@ -112,10 +134,44 @@ def message(msg,
 	):
 	_print_line(msg, _message, line, line_count, line_char, pad_top, pad_bottom, pad)
 
+def message_bold(msg,
+		line=False,
+		line_count=80,
+		line_char="-",
+		pad_top=False,
+		pad_bottom=False,
+		pad=False
+	):
+	_print_line(msg, _message_bold, line, line_count, line_char, pad_top, pad_bottom, pad)
+
+def message_big(msg_array):
+	message_bold("", line=True, line_char=" ")
+	for msg in msg_array:
+		message_bold(msg, line=True, line_char=" ")
+	message_bold("", line=True, line_char=" ")
+
+def confirm_continue():
+	warning("Continue? [Y/N]")
+	response = input("")
+	if (response.lower() != "yes") and (response.lower()[0] != "y"):
+		raise SystemExit
+	return
+
 # Unit tests.
 if __name__ == "__main__":
+	confirm_continue()
+	message_bold("Example message bold")
+	message_big([
+		"EXAMPLE MESSAGE BIG:",
+		"Yo dog wadup"
+	])
 	warning("warning")
 	error("error")
+	error_bold("Example error bold")
+	error_big([
+		"EXAMPLE ERROR BIG:",
+		"You fucked up!"
+	])
 	debug("debug")
 	success("success")
 	message("message")
