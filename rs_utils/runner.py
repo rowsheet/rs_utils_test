@@ -1,4 +1,4 @@
-from rs_utils import rs_logger
+from rs_utils import logger
 from subprocess import PIPE, Popen
 
 def step(cmd, msg=None, **kwargs):
@@ -7,9 +7,9 @@ def step(cmd, msg=None, **kwargs):
 	#-----------------------------------------------------------------------
 
 	# Default logging set to True.
-	cmd_log = True # Log the command with rs_logger.debug colored printing.
-	msg_log = True # Log the message with rs_logger.message colored printing.
-	stderr_log = True # Log the stderr with rs_logger.error colored printing.
+	cmd_log = True # Log the command with logger.debug colored printing.
+	msg_log = True # Log the message with logger.message colored printing.
+	stderr_log = True # Log the stderr with logger.error colored printing.
 	stdout_log = True # Log the stdout with normal printing.
 
 	# Default response set to True.
@@ -66,17 +66,17 @@ def step(cmd, msg=None, **kwargs):
 	if msg_return == True:
 		response["msg"] = msg
 	#-----------------------------------------------------------------------
-	# Print the message with rs_logger.message  if it exists and options
+	# Print the message with logger.message  if it exists and options
 	# are set to true.
 	#-----------------------------------------------------------------------
 	if msg is not None:
 		if msg_log == True:
-			rs_logger.message(msg)
+			logger.message(msg)
 	#-----------------------------------------------------------------------
-	# Print the command with rs_logger.debug if options are set to true.
+	# Print the command with logger.debug if options are set to true.
 	#-----------------------------------------------------------------------
 	if cmd_log == True:
-		rs_logger.debug(cmd)
+		logger.debug(cmd)
 
 	#-----------------------------------------------------------------------
 	# Run the command.
@@ -93,10 +93,10 @@ def step(cmd, msg=None, **kwargs):
 	if process.returncode != 0:
 		# Decode UTF-8 so newlines and tabs show correctly.
 		utf8_err = stderr.decode('UTF-8')
-		# Log the stderr in red with rs_logger.error if options are set
+		# Log the stderr in red with logger.error if options are set
 		# to true.
 		if stderr_log == True:
-			rs_logger.error(utf8_err)
+			logger.error(utf8_err)
 		# Set the stderr response if options are set to true.
 		if stderr_return == True:
 			response["stderr"] = utf8_err
@@ -229,7 +229,7 @@ if __name__ == "__main__":
 
 	# Indicate Unit Tests output restults.
 	print("\n")
-	rs_logger.message("----------------------------------TEST RESULTS:---------------------------------")
+	logger.message("----------------------------------TEST RESULTS:---------------------------------")
 	print("\n")
 
 	for test_key, test in tests.items():
@@ -239,12 +239,12 @@ if __name__ == "__main__":
 		# If "should" is None, make sure "actual" is None.
 		if test["should"]["cmd"] is None:
 			if test["actual"]["cmd"] is not None:
-				rs_logger.error(test_key + ": TEST FAILED")
+				logger.error(test_key + ": TEST FAILED")
 				continue
 		# If "should" is not None, make sure "actual" is not None.
 		else:
 			if test["actual"]["cmd"] is None:
-				rs_logger.error(test_key + ": TEST FAILED")
+				logger.error(test_key + ": TEST FAILED")
 				continue
 
 		#---------------------------------------------------------------
@@ -253,12 +253,12 @@ if __name__ == "__main__":
 		# If "should" is None, make sure "actual" is None.
 		if test["should"]["msg"] is None:
 			if test["actual"]["msg"] is not None:
-				rs_logger.error(test_key + ": TEST FAILED")
+				logger.error(test_key + ": TEST FAILED")
 				continue
 		# If "should" is not None, make sure "actual" is not None.
 		else:
 			if test["actual"]["msg"] is None:
-				rs_logger.error(test_key + ": TEST FAILED")
+				logger.error(test_key + ": TEST FAILED")
 				continue
 
 		#---------------------------------------------------------------
@@ -267,12 +267,12 @@ if __name__ == "__main__":
 		# If "should" is None, make sure "actual" is None.
 		if test["should"]["stdout"] is None:
 			if test["actual"]["stdout"] is not None:
-				rs_logger.error(test_key + ": TEST FAILED")
+				logger.error(test_key + ": TEST FAILED")
 				continue
 		# If "should" is not None, make sure "actual" is not None.
 		else:
 			if test["actual"]["stdout"] is None:
-				rs_logger.error(test_key + ": TEST FAILED")
+				logger.error(test_key + ": TEST FAILED")
 				continue
 
 		#---------------------------------------------------------------
@@ -281,25 +281,25 @@ if __name__ == "__main__":
 		# If "should" is None, make sure "actual" is None.
 		if test["should"]["stderr"] is None:
 			if test["actual"]["stderr"] is not None:
-				rs_logger.error(test_key + ": TEST FAILED")
+				logger.error(test_key + ": TEST FAILED")
 				continue
 		# If "should" is not None, make sure "actual" is not None.
 		else:
 			if test["actual"]["stderr"] is None:
-				rs_logger.error(test_key + ": TEST FAILED")
+				logger.error(test_key + ": TEST FAILED")
 				continue
 
 		#---------------------------------------------------------------
 		# Check response "success" and "error".
 		#---------------------------------------------------------------
 		if test["actual"]["error"] != test["should"]["error"]:
-			rs_logger.error(test_key + ": TEST FAILED")
+			logger.error(test_key + ": TEST FAILED")
 			continue
 		if test["actual"]["success"] != test["should"]["success"]:
-			rs_logger.error(test_key + ": TEST FAILED")
+			logger.error(test_key + ": TEST FAILED")
 			continue
 
 		#---------------------------------------------------------------
 		# TEST PASSED if it got to here.
 		#---------------------------------------------------------------
-		rs_logger.success(test_key + ": TEST PASSED")
+		logger.success(test_key + ": TEST PASSED")

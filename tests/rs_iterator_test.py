@@ -1,6 +1,6 @@
-from rs_utils import rs_runner
-from rs_utils import rs_logger
-from rs_utils.rs_itterator import RS_Itterator
+from rs_utils import runner
+from rs_utils import logger
+from rs_utils.itterator import Itterator
 
 # Example non rs_step process with args and possible failure.
 def POPULATE_FILE_STEP_ONE(**kwargs):
@@ -46,7 +46,7 @@ def PRINT_FINAL_REPORT(**kwargs):
 		raw_data = f.read()
 	import json
 	data = json.loads(raw_data)
-	rs_logger.success("FINAL REPORT:", line=True, line_char="*")
+	logger.success("FINAL REPORT:", line=True, line_char="*")
 	import pprint as pp
 	pp.pprint(data)
 
@@ -60,7 +60,7 @@ cleanup_file_step_two_msg = "Cleaning up, removing file_step_two.txt."
 
 # Create the ittorator.
 
-rsi = RS_Itterator()
+rsi = Itterator()
 
 # CREATE_FILE_STEP_ONE.
 # 	Create a file called "file_step_one.txt".

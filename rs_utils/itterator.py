@@ -1,10 +1,10 @@
-from rs_utils import rs_runner
-from rs_utils import rs_logger 
+from rs_utils import runner
+from rs_utils import logger 
 
 class _RSIProcess:
 
 	name = None
-	rs_step = rs_runner.step
+	rs_step = runner.step
 
 	rs_step_cmd = None
 	rs_step_msg = None
@@ -70,19 +70,19 @@ class _RSIProcess:
 		if self.next_process is not None:
 			self.next_process.run()
 		else:
-			rs_logger.message("All processes complete.")
+			logger.message("All processes complete.")
 
 	def _handle_cleanup(self):
 		if self.cleanup_rs_step_cmd is not None:
-			response = rs_runner.step(
+			response = runner.step(
 				self.cleanup_rs_step_cmd,
 				self.cleanup_rs_step_msg,
 				**self.cleanup_rs_step_args,
 			)
 			# Check the response.
 			if response["error"] == True:
-				rs_logger.success(response["cmd"])
-				rs_logger.error_big([
+				logger.success(response["cmd"])
+				logger.error_big([
 					"Cleanup Step Error:",
 					self.name,
 					# If you're cleanup step fucked up, you have to do it yourself.
@@ -90,10 +90,10 @@ class _RSIProcess:
 				])
 				# Print the "stderr" if it exists.
 				if response["stderr"] is not None:
-					rs_logger.error_bold("Last response stderr:")
-					rs_logger.error(response["stderr"])
+					logger.error_bold("Last response stderr:")
+					logger.error(response["stderr"])
 				else:
-					rs_logger.error_bold("No stderr from last response:")
+					logger.error_bold("No stderr from last response:")
 		elif self.cleanup_step is not None:
 			try:
 				response = self.cleanup_step(
@@ -101,29 +101,29 @@ class _RSIProcess:
 				)
 			except Exception as ex:
 				# Print a big bold error.
-				rs_logger.error_big([
+				logger.error_big([
 					"Cleanup Step Error:",
 					self.name,
 					# If you're cleanup step fucked up, you have to do it yourself.
 					"Unable to clean up. You'll have to do this yourself."
 				])
 				# Print the exception message string.
-				rs_logger.error_bold("Last procedure exception:")
-				rs_logger.error_bold(str(ex))
+				logger.error_bold("Last procedure exception:")
+				logger.error_bold(str(ex))
 
 	def run(self):
 		# Print a big, padded, bold message for each step.
-		rs_logger.message_big([
+		logger.message_big([
 			"Running Itterator Step:",
 			self.name,
 		])
 		# Before running the step, check if we should get confirmation.
 		if self.require_confirmation == True:
-			rs_logger.confirm_continue()
+			logger.confirm_continue()
 		# We might get an "rs_step" or just a regular step that's a function.
 		# We'll checkfor the rs_step_cmd.
 		if self.rs_step_cmd is not None:
-			response = rs_runner.step(
+			response = runner.step(
 				self.rs_step_cmd,
 				self.rs_step_msg,
 				**self.rs_step_args,
@@ -131,16 +131,16 @@ class _RSIProcess:
 			# Check the response.
 			if response["error"] == True:
 				# Print a big bold error.
-				rs_logger.error_big([
+				logger.error_big([
 					"Itterator Step Error:",
 					self.name,
 				])
 				# Print the "stderr" if it exists.
 				if response["stderr"] is not None:
-					rs_logger.error_bold("Last response stderr:")
-					rs_logger.error(response["stderr"])
+					logger.error_bold("Last response stderr:")
+					logger.error(response["stderr"])
 				else:
-					rs_logger.error_bold("No stderr from last response:")
+					logger.error_bold("No stderr from last response:")
 				# Handle cleanup.
 				self._handle_cleanup()
 				# Exit after cleanup if "stop_on_error" is set.
@@ -153,13 +153,13 @@ class _RSIProcess:
 				)
 			except Exception as ex:
 				# Print a big bold error.
-				rs_logger.error_big([
+				logger.error_big([
 					"Itterator Step Error:",
 					self.name,
 				])
 				# Print the exception message string.
-				rs_logger.error_bold("Last procedure exception:")
-				rs_logger.error_bold(str(ex))
+				logger.error_bold("Last procedure exception:")
+				logger.error_bold(str(ex))
 				# Handle cleanup.
 				self._handle_cleanup()
 				# Exit after cleanup if "stop_on_error" is set.
@@ -167,7 +167,7 @@ class _RSIProcess:
 					raise SystemExit
 		self._run_next_process()
 
-class RS_Itterator:
+class Itterator:
 
 	processes = {}
 	start_process = None
@@ -176,8 +176,8 @@ class RS_Itterator:
 	all_process_names = []
 
 	def __init__(self):
-		rs_logger.message_big([
-			"Starting new RS_Itterator..."
+		logger.message_big([
+			"Starting new Itterator..."
 		])
 	
 	def register_process(self, process):
@@ -247,7 +247,7 @@ class RS_Itterator:
 				process.next_process = rsi_process
 
 	def _run_pre_flight_checks(self):
-		rs_logger.message("Running pre-flight checks...", line=True)
+		logger.message("Running pre-flight checks...", line=True)
 		# Go through each process and make sure that it's "next_process" exists in all_process_names.
 		for process_name, process in self.processes.items():
 			# The "next_process" is assigned as a string on initialization, but if another process
@@ -268,14 +268,14 @@ class RS_Itterator:
 		try:
 			self._run_pre_flight_checks()
 		except Exception as ex:
-			rs_logger.error_big([
+			logger.error_big([
 				"Invalid itterator step configuration:",
 				str(ex)
 			])
 			raise SystemExit
-		rs_logger.message("Running itterator...", line=True)
+		logger.message("Running itterator...", line=True)
 		if self.start_process is None:
-			rs_logger.error("Error: Could not start itterator with no start_process.")
+			logger.error("Error: Could not start itterator with no start_process.")
 			return
 		self.start_process.run()
 
@@ -326,7 +326,7 @@ if __name__ == "__main__":
 			raw_data = f.read()
 		import json
 		data = json.loads(raw_data)
-		rs_logger.success("FINAL REPORT:", line=True, line_char="*")
+		logger.success("FINAL REPORT:", line=True, line_char="*")
 		import pprint as pp
 		pp.pprint(data)
 
@@ -340,7 +340,7 @@ if __name__ == "__main__":
 
 	# Create the ittorator.
 
-	rsi = RS_Itterator()
+	rsi = Itterator()
 
 	# CREATE_FILE_STEP_ONE.
 	# 	Create a file called "file_step_one.txt".

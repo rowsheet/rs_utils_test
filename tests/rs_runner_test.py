@@ -1,11 +1,11 @@
-from rs_utils import rs_runner
-from rs_utils import rs_logger
+from rs_utils import runner
+from rs_utils import logger
 
 # All unit tests.
 tests = {
 	# Test creating a file.
 	"touch": {
-		"actual": rs_runner.step(
+		"actual": runner.step(
 			"touch test.txt",
 			"Creating test file...",
 		),
@@ -20,7 +20,7 @@ tests = {
 	},
 	# Test listing containers.
 	"docker_ps": {
-		"actual": rs_runner.step(
+		"actual": runner.step(
 			"docker ps",
 			"Listing running containers...",
 		),
@@ -35,7 +35,7 @@ tests = {
 	},
 	# Test listing containers without "command" logging or return.
 	"docker_ps_NO_CMD": {
-		"actual": rs_runner.step(
+		"actual": runner.step(
 			"docker ps",
 			"Listing running containers... NO CMD",
 			cmd_log = False,
@@ -52,7 +52,7 @@ tests = {
 	},
 	# Test listing containers without "stdout" logging or return.
 	"docker_ps_NO_STDOUT": {
-		"actual": rs_runner.step(
+		"actual": runner.step(
 			"docker ps",
 			"Listing running containers... NO STDOUT",
 			stdout_log = False,
@@ -69,7 +69,7 @@ tests = {
 	},
 	# Test removing a container that doesn't exist.
 	"docker_rm_error": {
-		"actual": rs_runner.step(
+		"actual": runner.step(
 			"docker rm containerthatdoesntexist",
 			"Listing running containers...",
 		),
@@ -85,7 +85,7 @@ tests = {
 	# Test removing a container that doesn't exist without 
 	# "stderr" logging or return.
 	"docker_rm_error_NO_STDERR": {
-		"actual": rs_runner.step(
+		"actual": runner.step(
 			"docker rm containerthatdoesntexist",
 			"Listing running containers... NO STDERR",
 			stderr_log = False,
@@ -104,7 +104,7 @@ tests = {
 
 # Indicate Unit Tests output restults.
 print("\n")
-rs_logger.message("----------------------------------TEST RESULTS:---------------------------------")
+logger.message("----------------------------------TEST RESULTS:---------------------------------")
 print("\n")
 
 for test_key, test in tests.items():
@@ -114,12 +114,12 @@ for test_key, test in tests.items():
 	# If "should" is None, make sure "actual" is None.
 	if test["should"]["cmd"] is None:
 		if test["actual"]["cmd"] is not None:
-			rs_logger.error(test_key + ": TEST FAILED")
+			logger.error(test_key + ": TEST FAILED")
 			continue
 	# If "should" is not None, make sure "actual" is not None.
 	else:
 		if test["actual"]["cmd"] is None:
-			rs_logger.error(test_key + ": TEST FAILED")
+			logger.error(test_key + ": TEST FAILED")
 			continue
 
 	#---------------------------------------------------------------
@@ -128,12 +128,12 @@ for test_key, test in tests.items():
 	# If "should" is None, make sure "actual" is None.
 	if test["should"]["msg"] is None:
 		if test["actual"]["msg"] is not None:
-			rs_logger.error(test_key + ": TEST FAILED")
+			logger.error(test_key + ": TEST FAILED")
 			continue
 	# If "should" is not None, make sure "actual" is not None.
 	else:
 		if test["actual"]["msg"] is None:
-			rs_logger.error(test_key + ": TEST FAILED")
+			logger.error(test_key + ": TEST FAILED")
 			continue
 
 	#---------------------------------------------------------------
@@ -142,12 +142,12 @@ for test_key, test in tests.items():
 	# If "should" is None, make sure "actual" is None.
 	if test["should"]["stdout"] is None:
 		if test["actual"]["stdout"] is not None:
-			rs_logger.error(test_key + ": TEST FAILED")
+			logger.error(test_key + ": TEST FAILED")
 			continue
 	# If "should" is not None, make sure "actual" is not None.
 	else:
 		if test["actual"]["stdout"] is None:
-			rs_logger.error(test_key + ": TEST FAILED")
+			logger.error(test_key + ": TEST FAILED")
 			continue
 
 	#---------------------------------------------------------------
@@ -156,25 +156,25 @@ for test_key, test in tests.items():
 	# If "should" is None, make sure "actual" is None.
 	if test["should"]["stderr"] is None:
 		if test["actual"]["stderr"] is not None:
-			rs_logger.error(test_key + ": TEST FAILED")
+			logger.error(test_key + ": TEST FAILED")
 			continue
 	# If "should" is not None, make sure "actual" is not None.
 	else:
 		if test["actual"]["stderr"] is None:
-			rs_logger.error(test_key + ": TEST FAILED")
+			logger.error(test_key + ": TEST FAILED")
 			continue
 
 	#---------------------------------------------------------------
 	# Check response "success" and "error".
 	#---------------------------------------------------------------
 	if test["actual"]["error"] != test["should"]["error"]:
-		rs_logger.error(test_key + ": TEST FAILED")
+		logger.error(test_key + ": TEST FAILED")
 		continue
 	if test["actual"]["success"] != test["should"]["success"]:
-		rs_logger.error(test_key + ": TEST FAILED")
+		logger.error(test_key + ": TEST FAILED")
 		continue
 
 	#---------------------------------------------------------------
 	# TEST PASSED if it got to here.
 	#---------------------------------------------------------------
-	rs_logger.success(test_key + ": TEST PASSED")
+	logger.success(test_key + ": TEST PASSED")
