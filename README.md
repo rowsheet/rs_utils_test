@@ -1,4 +1,4 @@
-# RowSheet Example Module
+# RowSheet Utils
 
 Install:
 
