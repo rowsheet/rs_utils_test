@@ -1,7 +1,27 @@
 from rs_utils import rs_logger
 
+rs_logger.confirm_continue()
+rs_logger.message_bold("Example message bold")
+rs_logger.message_big([
+	"EXAMPLE MESSAGE BIG:",
+	"Yo dog wadup"
+])
 rs_logger.warning("warning")
 rs_logger.error("error")
+rs_logger.error_bold("Example error bold")
+rs_logger.error_big([
+	"EXAMPLE ERROR BIG:",
+	"You fucked up!"
+])
+rs_logger.error_big([
+	'EXAMPLE ERROR BIG:',
+	'Some really long error message that will be more than the number of',
+	' lines than is in the box space.',
+])
+rs_logger.error_big([
+	"EXAMPLE ERROR BIG:",
+	"Some really long error message that will be more than the number of lines than is in the box space."
+])
 rs_logger.debug("debug")
 rs_logger.success("success")
 rs_logger.message("message")
