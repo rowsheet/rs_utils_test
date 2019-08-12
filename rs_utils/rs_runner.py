@@ -1,4 +1,4 @@
-import rs_logger
+from rs_utils import rs_logger
 import subprocess
 
 def step(cmd, msg=None, **kwargs):
