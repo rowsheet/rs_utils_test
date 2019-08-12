@@ -1,5 +1,6 @@
 from termcolor import colored, cprint
 import math
+import re
 
 def _warning(msg):
 	cprint(msg, "yellow")
@@ -21,6 +22,18 @@ def _message(msg):
 
 def _message_bold(msg):
 	print(colored(msg, attrs=['reverse', 'bold']))
+
+def _fit_msg(msg_array, size):
+	size -= 10
+	all_messages = []
+	for msg in msg_array:
+		if (len(msg) > size):
+			chunks = [msg[y-size:y] for y in range(size, len(msg)+size,size)]
+			for chunk in chunks:
+				all_messages.append(chunk)
+		else:
+			all_messages.append(msg)
+	return all_messages 
 
 def _print_line(msg,
 		print_method,
@@ -99,10 +112,10 @@ def error_bold(msg,
 	_print_line(msg, _error_bold, line, line_count, line_char, pad_top, pad_bottom, pad)
 
 def error_big(msg_array):
-	error_bold("", line=True, line_char=" ")
-	for msg in msg_array:
+	error_bold("", line=True, line_char="- ")
+	for msg in _fit_msg(msg_array, 80):
 		error_bold(msg, line=True, line_char=" ")
-	error_bold("", line=True, line_char=" ")
+	error_bold("", line=True, line_char="- ")
 
 def debug(msg,
 		line=False,
@@ -145,10 +158,10 @@ def message_bold(msg,
 	_print_line(msg, _message_bold, line, line_count, line_char, pad_top, pad_bottom, pad)
 
 def message_big(msg_array):
-	message_bold("", line=True, line_char=" ")
-	for msg in msg_array:
+	message_bold("", line=True, line_char="- ")
+	for msg in _fit_msg(msg_array, 80):
 		message_bold(msg, line=True, line_char=" ")
-	message_bold("", line=True, line_char=" ")
+	message_bold("", line=True, line_char="- ")
 
 def confirm_continue():
 	warning("Continue? [Y/N]")
@@ -171,6 +184,15 @@ if __name__ == "__main__":
 	error_big([
 		"EXAMPLE ERROR BIG:",
 		"You fucked up!"
+	])
+	error_big([
+		'EXAMPLE ERROR BIG:',
+		'Some really long error message that will be more than the number of',
+		' lines than is in the box space.',
+	])
+	error_big([
+		"EXAMPLE ERROR BIG:",
+		"Some really long error message that will be more than the number of lines than is in the box space."
 	])
 	debug("debug")
 	success("success")
