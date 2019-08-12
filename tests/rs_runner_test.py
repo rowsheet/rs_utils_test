@@ -113,12 +113,12 @@ for test_key, test in tests.items():
 	#---------------------------------------------------------------
 	# If "should" is None, make sure "actual" is None.
 	if test["should"]["cmd"] is None:
-		if test["actual"]["cmd"] is not None:
+		if test["actual"].CMD is not None:
 			logger.error(test_key + ": TEST FAILED")
 			continue
 	# If "should" is not None, make sure "actual" is not None.
 	else:
-		if test["actual"]["cmd"] is None:
+		if test["actual"].CMD is None:
 			logger.error(test_key + ": TEST FAILED")
 			continue
 
@@ -127,12 +127,12 @@ for test_key, test in tests.items():
 	#---------------------------------------------------------------
 	# If "should" is None, make sure "actual" is None.
 	if test["should"]["msg"] is None:
-		if test["actual"]["msg"] is not None:
+		if test["actual"].MSG is not None:
 			logger.error(test_key + ": TEST FAILED")
 			continue
 	# If "should" is not None, make sure "actual" is not None.
 	else:
-		if test["actual"]["msg"] is None:
+		if test["actual"].MSG is None:
 			logger.error(test_key + ": TEST FAILED")
 			continue
 
@@ -141,12 +141,12 @@ for test_key, test in tests.items():
 	#---------------------------------------------------------------
 	# If "should" is None, make sure "actual" is None.
 	if test["should"]["stdout"] is None:
-		if test["actual"]["stdout"] is not None:
+		if test["actual"].STDOUT is not None:
 			logger.error(test_key + ": TEST FAILED")
 			continue
 	# If "should" is not None, make sure "actual" is not None.
 	else:
-		if test["actual"]["stdout"] is None:
+		if test["actual"].STDOUT is None:
 			logger.error(test_key + ": TEST FAILED")
 			continue
 
@@ -155,22 +155,22 @@ for test_key, test in tests.items():
 	#---------------------------------------------------------------
 	# If "should" is None, make sure "actual" is None.
 	if test["should"]["stderr"] is None:
-		if test["actual"]["stderr"] is not None:
+		if test["actual"].STDERR is not None:
 			logger.error(test_key + ": TEST FAILED")
 			continue
 	# If "should" is not None, make sure "actual" is not None.
 	else:
-		if test["actual"]["stderr"] is None:
+		if test["actual"].STDERR is None:
 			logger.error(test_key + ": TEST FAILED")
 			continue
 
 	#---------------------------------------------------------------
 	# Check response "success" and "error".
 	#---------------------------------------------------------------
-	if test["actual"]["error"] != test["should"]["error"]:
+	if test["actual"].ERROR != test["should"]["error"]:
 		logger.error(test_key + ": TEST FAILED")
 		continue
-	if test["actual"]["success"] != test["should"]["success"]:
+	if test["actual"].SUCCESS != test["should"]["success"]:
 		logger.error(test_key + ": TEST FAILED")
 		continue
 
