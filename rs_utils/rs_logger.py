@@ -1,22 +1,29 @@
 from termcolor import cprint
 import math
 
-def warning(msg):
+def _warning(msg):
 	cprint(msg, "yellow")
 
-def error(msg):
+def _error(msg):
 	cprint(msg, "red")
 
-def debug(msg):
+def _debug(msg):
 	cprint(msg, "cyan")
 
-def message(msg,
+def _success(msg):
+	cprint(msg, "green")
+
+def _message(msg):
+	cprint(msg, "white", "on_blue")
+
+def _print_line(msg,
+		print_method,
 		line=False,
 		line_count=80,
 		line_char="-",
 		pad_top=False,
 		pad_bottom=False,
-		pad=False
+		pad=False,
 	):
 	# Check if we should print the message in a line.
 	if line == True:
@@ -32,9 +39,9 @@ def message(msg,
 		if len(msg) >= line_count:
 			if pad or pad_top:
 				print("\n")
-			cprint(line_start[0:line_count], "white", "on_blue")
-			cprint(msg, "white", "on_blue")
-			cprint(line_end[0:line_count], "white", "on_blue")
+			print_method(line_start[0:line_count])
+			print_method(msg)
+			print_method(line_end[0:line_count])
 			if pad or pad_bottom:
 				print("\n")
 			return
@@ -44,19 +51,66 @@ def message(msg,
 		msg = line_start + msg + line_end
 		if pad or pad_top:
 			print("\n")
-		cprint(msg, "white", "on_blue")
+		print_method(msg)
 		if pad or pad_bottom:
 			print("\n")
 		return
 	# Print on blue background.
 	if pad or pad_top:
 		print("\n")
-	cprint(msg, "white", "on_blue")
+	print_method(msg)
 	if pad or pad_bottom:
 		print("\n")
 
-def success(msg):
-	cprint(msg, "green")
+def warning(msg,
+		line=False,
+		line_count=80,
+		line_char="-",
+		pad_top=False,
+		pad_bottom=False,
+		pad=False
+	):
+	_print_line(msg, _warning, line, line_count, line_char, pad_top, pad_bottom, pad)
+
+def error(msg,
+		line=False,
+		line_count=80,
+		line_char="-",
+		pad_top=False,
+		pad_bottom=False,
+		pad=False
+	):
+	_print_line(msg, _error, line, line_count, line_char, pad_top, pad_bottom, pad)
+
+def debug(msg,
+		line=False,
+		line_count=80,
+		line_char="-",
+		pad_top=False,
+		pad_bottom=False,
+		pad=False
+	):
+	_print_line(msg, _debug, line, line_count, line_char, pad_top, pad_bottom, pad)
+
+def success(msg,
+		line=False,
+		line_count=80,
+		line_char="-",
+		pad_top=False,
+		pad_bottom=False,
+		pad=False
+	):
+	_print_line(msg, _success, line, line_count, line_char, pad_top, pad_bottom, pad)
+
+def message(msg,
+		line=False,
+		line_count=80,
+		line_char="-",
+		pad_top=False,
+		pad_bottom=False,
+		pad=False
+	):
+	_print_line(msg, _message, line, line_count, line_char, pad_top, pad_bottom, pad)
 
 # Unit tests.
 if __name__ == "__main__":
@@ -86,3 +140,8 @@ if __name__ == "__main__":
 	message("message with line 80", line=True)
 	message("message with line 80", line=True)
 	message("message with line 80", line=True)
+	warning("warning with line 80 pad top only", line=True, pad_top=True)
+	error("error with line 80", line=True)
+	error("error with line 80 pad both top and bottom", line=True, pad=True)
+	success("success with line 80", line=True)
+	debug("debug with line 80", line=True)
