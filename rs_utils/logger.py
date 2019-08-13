@@ -12,7 +12,7 @@ def _error_bold(msg):
 	print(colored(msg, 'white', 'on_red', attrs=['bold']))
 
 def _debug(msg):
-	cprint(msg, "cyan")
+	cprint(msg, "blue")
 
 def _success(msg):
 	cprint(msg, "green")
