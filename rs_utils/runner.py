@@ -104,9 +104,7 @@ def step(cmd, msg=None, **kwargs):
 			response.STDERR = utf8_err
 		# You must set the returned response status, in this case with
 		#	error => True
-		#	success => False 
 		response.ERROR = True
-		response.SUCCESS = False
 	# If it's okay, just print the output like normal.
 	else:
 
@@ -121,9 +119,7 @@ def step(cmd, msg=None, **kwargs):
 			response.STDOUT = utf8_out
 		# You must set the returned response status, in this case with
 		#	error => False 
-		#	success => True 
 		response.ERROR = False
-		response.SUCCESS = True
 	return response
 
 # Unit test.
@@ -141,7 +137,6 @@ if __name__ == "__main__":
 				"msg": "Creating test file...",
 				"stderr": None,
 				"stdout": "",
-				"success": True,
 				"error": False
 			}
 		},
@@ -156,7 +151,6 @@ if __name__ == "__main__":
 				"msg": "",
 				"stderr": None,
 				"stdout": "",
-				"success": True,
 				"error": False
 			}
 		},
@@ -173,7 +167,6 @@ if __name__ == "__main__":
 				"msg": "",
 				"stderr": None,
 				"stdout": "",
-				"success": True,
 				"error": False
 			}
 		},
@@ -190,7 +183,6 @@ if __name__ == "__main__":
 				"msg": "",
 				"stderr": None,
 				"stdout": None, # Ensure "stdout" is None.
-				"success": True,
 				"error": False
 			}
 		},
@@ -205,7 +197,6 @@ if __name__ == "__main__":
 				"msg": "",
 				"stderr": "", # Ensure "stderror" is not None.
 				"stdout": None,
-				"success": False,
 				"error": True 
 			}
 		},
@@ -223,7 +214,6 @@ if __name__ == "__main__":
 				"msg": "",
 				"stderr": None, # Ensure "stderror" is None.
 				"stdout": None,
-				"success": False,
 				"error": True 
 			}
 		},
@@ -290,16 +280,6 @@ if __name__ == "__main__":
 			if test["actual"].STDERR is None:
 				logger.error(test_key + ": TEST FAILED")
 				continue
-
-		#---------------------------------------------------------------
-		# Check response "success" and "error".
-		#---------------------------------------------------------------
-		if test["actual"].ERROR != test["should"]["error"]:
-			logger.error(test_key + ": TEST FAILED")
-			continue
-		if test["actual"].SUCCESS != test["should"]["success"]:
-			logger.error(test_key + ": TEST FAILED")
-			continue
 
 		#---------------------------------------------------------------
 		# TEST PASSED if it got to here.

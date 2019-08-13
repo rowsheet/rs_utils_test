@@ -165,16 +165,6 @@ for test_key, test in tests.items():
 			continue
 
 	#---------------------------------------------------------------
-	# Check response "success" and "error".
-	#---------------------------------------------------------------
-	if test["actual"].ERROR != test["should"]["error"]:
-		logger.error(test_key + ": TEST FAILED")
-		continue
-	if test["actual"].SUCCESS != test["should"]["success"]:
-		logger.error(test_key + ": TEST FAILED")
-		continue
-
-	#---------------------------------------------------------------
 	# TEST PASSED if it got to here.
 	#---------------------------------------------------------------
 	logger.success(test_key + ": TEST PASSED")

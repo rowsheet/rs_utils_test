@@ -4,7 +4,6 @@ class Response:
 	MSG = None 
 	STDOUT = None 
 	STDERR = None 
-	SUCCESS = None 
 	ERROR = None 
 	ERROR_MSG = None
 	DATA = None
