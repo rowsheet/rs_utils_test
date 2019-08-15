@@ -1,0 +1,8 @@
+{
+	"HOST_PORT": 9995,
+	"CONTAINER_PORT": 9995,
+	"SERVICE_NAME": "example_auto_cleanup_service",
+	"CONTAINER_NAME": "example_auto_cleanup_container",
+	"IMAGE_NAME": "example_auto_cleanup_image",
+	"DOCKERFILE_PATH": "."
+}

@@ -16,7 +16,7 @@ rs_util_dev_path = os.environ['RS_UTIL_DEV_PATH']
 Define the test function.
 """
 
-def test(actual, should, cleanup):
+def test(actual, should, cleanup=None):
 	if actual.ERROR != should["ERROR"]:
 		if cleanup is not None:
 			cleanup()
@@ -49,9 +49,45 @@ tests = {
 		"should": {
 			"ERROR": False
 		},
+	},
+	"Example Service (Cleanup Test)": {
+		"run": True,
+		"actual": lambda: docker.start_service(
+			os.path.join(
+				rs_util_dev_path,
+				"tests",
+				"docker_tests",
+				"example_cleanup_service",
+			)
+		),
+		"should": {
+			"ERROR": False
+		},
+		# Test cleanup function. cleanup() must be called in the test
+		# function of this unit test.
 		"cleanup": lambda: runner.step(
-			"docker service rm example_service",
-			"Cleaning up example_service"
+			"docker service rm example_cleanup_service",
+			"Cleaning up example_cleanup_service"
+		),
+	},
+	"Example Service (Auto Cleanup Test)": {
+		"run": True,
+		"actual": lambda: docker.start_service(
+			os.path.join(
+				rs_util_dev_path,
+				"tests",
+				"docker_tests",
+				"example_auto_cleanup_service",
+			)
+		),
+		"should": {
+			"ERROR": False
+		},
+		# Test auto_cleanup function. auto_cleanup() is called on every
+		# unit test.
+		"auto_cleanup": lambda: runner.step(
+			"docker service rm example_auto_cleanup_service",
+			"Cleaning up example_auto_cleanup_service"
 		),
 	},
 	"Example Missing Dockerfile": {
@@ -66,7 +102,7 @@ tests = {
 		"should": {
 			"ERROR": True 
 		},
-		"cleanup": lambda: runner.step(
+		"cleanup_auto": lambda: runner.step(
 			"docker service rm example_missing_dockerfile_service",
 			"Cleaning up example_service"
 		),
@@ -83,7 +119,7 @@ tests = {
 		"should": {
 			"ERROR": True 
 		},
-		"cleanup": lambda: runner.step(
+		"cleanup_auto": lambda: runner.step(
 			"docker service rm example_missing_entrypoint_service",
 			"Cleaning up example_service"
 		),
@@ -101,7 +137,7 @@ tests = {
 		"should": {
 			"ERROR": True 
 		},
-		"cleanup": lambda: runner.step(
+		"cleanup_auto": lambda: runner.step(
 			"docker service rm example_broken_entrypoint_service",
 			"Cleaning up example_service"
 		),

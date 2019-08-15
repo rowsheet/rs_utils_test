@@ -1,0 +1,8 @@
+{
+	"HOST_PORT": 9994,
+	"CONTAINER_PORT": 9994,
+	"SERVICE_NAME": "example_cleanup_service",
+	"CONTAINER_NAME": "example_cleanup_container",
+	"IMAGE_NAME": "example_cleanup_image",
+	"DOCKERFILE_PATH": "."
+}
