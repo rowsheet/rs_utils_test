@@ -1,0 +1,8 @@
+{
+	"HOST_PORT": 9999,
+	"CONTAINER_PORT": 9999,
+	"SERVICE_NAME": "example_service",
+	"CONTAINER_NAME": "example_container",
+	"IMAGE_NAME": "example_image",
+	"DOCKERFILE_PATH": "."
+}

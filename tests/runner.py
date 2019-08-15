@@ -14,7 +14,20 @@ tests = {
 			"msg": "Creating test file...",
 			"stderr": None,
 			"stdout": "",
-			"success": True,
+			"error": False
+		}
+	},
+	# Test removing a file.
+	"touch": {
+		"actual": runner.step(
+			"rm test.txt",
+			"Creating test file...",
+		),
+		"should": {
+			"cmd": "touch test.txt",
+			"msg": "Creating test file...",
+			"stderr": None,
+			"stdout": "",
 			"error": False
 		}
 	},
@@ -29,7 +42,6 @@ tests = {
 			"msg": "",
 			"stderr": None,
 			"stdout": "",
-			"success": True,
 			"error": False
 		}
 	},
@@ -46,7 +58,6 @@ tests = {
 			"msg": "",
 			"stderr": None,
 			"stdout": "",
-			"success": True,
 			"error": False
 		}
 	},
@@ -59,11 +70,10 @@ tests = {
 			stdout_return = False,
 		),
 		"should": {
-			"cmd": "", 
+			"cmd": "",
 			"msg": "",
 			"stderr": None,
 			"stdout": None, # Ensure "stdout" is None.
-			"success": True,
 			"error": False
 		}
 	},
@@ -74,15 +84,14 @@ tests = {
 			"Listing running containers...",
 		),
 		"should": {
-			"cmd": "", 
+			"cmd": "",
 			"msg": "",
 			"stderr": "", # Ensure "stderror" is not None.
 			"stdout": None,
-			"success": False,
-			"error": True 
+			"error": True
 		}
 	},
-	# Test removing a container that doesn't exist without 
+	# Test removing a container that doesn't exist without
 	# "stderr" logging or return.
 	"docker_rm_error_NO_STDERR": {
 		"actual": runner.step(
@@ -92,12 +101,11 @@ tests = {
 			stderr_return = False,
 		),
 		"should": {
-			"cmd": "", 
+			"cmd": "",
 			"msg": "",
 			"stderr": None, # Ensure "stderror" is None.
 			"stdout": None,
-			"success": False,
-			"error": True 
+			"error": True
 		}
 	},
 }

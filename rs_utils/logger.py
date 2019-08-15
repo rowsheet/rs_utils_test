@@ -2,14 +2,17 @@ from termcolor import colored, cprint
 import math
 import re
 
+"""
+Message formatting.
+"""
+
+# Normal formatting.
+
 def _warning(msg):
 	cprint(msg, "yellow")
 
 def _error(msg):
 	cprint(msg, "red")
-
-def _error_bold(msg):
-	print(colored(msg, 'white', 'on_red', attrs=['bold']))
 
 def _debug(msg):
 	cprint(msg, "blue")
@@ -20,8 +23,15 @@ def _success(msg):
 def _message(msg):
 	cprint(msg, "white", "on_blue")
 
+# Bold formatting.
+
+def _error_bold(msg):
+	print(colored(msg, 'white', 'on_red', attrs=['bold']))
+
 def _message_bold(msg):
 	print(colored(msg, attrs=['reverse', 'bold']))
+
+# Logging utils.
 
 def _fit_msg(msg_array, size):
 	size -= 10
@@ -81,6 +91,26 @@ def _print_line(msg,
 	if pad or pad_bottom:
 		print("\n")
 
+def _log_big(messages, logging_function):
+	logging_function("", line=True, line_char="- ")
+	"""
+	Messages may be either:
+		1) A list of strings of messages.
+		2) A single message.
+	If it's not an array. Assume it's a string.
+	"""
+	if type(messages).__name__ == "list":
+		for msg in _fit_msg(messages, 80):
+			logging_function(msg, line=True, line_char=" ")
+	else:
+		msg = messages # Assume it's a string.
+		logging_function(msg, line=True, line_char=" ")
+	logging_function("", line=True, line_char="- ")
+
+"""
+Standard logging.
+"""
+
 def warning(msg,
 		line=False,
 		line_count=80,
@@ -100,22 +130,6 @@ def error(msg,
 		pad=False
 	):
 	_print_line(msg, _error, line, line_count, line_char, pad_top, pad_bottom, pad)
-
-def error_bold(msg,
-		line=False,
-		line_count=80,
-		line_char="-",
-		pad_top=False,
-		pad_bottom=False,
-		pad=False
-	):
-	_print_line(msg, _error_bold, line, line_count, line_char, pad_top, pad_bottom, pad)
-
-def error_big(msg_array):
-	error_bold("", line=True, line_char="- ")
-	for msg in _fit_msg(msg_array, 80):
-		error_bold(msg, line=True, line_char=" ")
-	error_bold("", line=True, line_char="- ")
 
 def debug(msg,
 		line=False,
@@ -147,6 +161,20 @@ def message(msg,
 	):
 	_print_line(msg, _message, line, line_count, line_char, pad_top, pad_bottom, pad)
 
+"""
+Bold logging.
+"""
+
+def error_bold(msg,
+		line=False,
+		line_count=80,
+		line_char="-",
+		pad_top=False,
+		pad_bottom=False,
+		pad=False
+	):
+	_print_line(msg, _error_bold, line, line_count, line_char, pad_top, pad_bottom, pad)
+
 def message_bold(msg,
 		line=False,
 		line_count=80,
@@ -157,11 +185,19 @@ def message_bold(msg,
 	):
 	_print_line(msg, _message_bold, line, line_count, line_char, pad_top, pad_bottom, pad)
 
+"""
+Big logging.
+"""
+
+def error_big(msg_array):
+	_log_big(msg_array, error_bold)
+
 def message_big(msg_array):
-	message_bold("", line=True, line_char="- ")
-	for msg in _fit_msg(msg_array, 80):
-		message_bold(msg, line=True, line_char=" ")
-	message_bold("", line=True, line_char="- ")
+	_log_big(msg_array, message_bold)
+
+"""
+Interactive.
+"""
 
 def confirm_continue():
 	warning("Continue? [Y/N]")
@@ -170,56 +206,13 @@ def confirm_continue():
 		raise SystemExit
 	return
 
+#-------------------------------------------------------------------------------
 # Unit tests.
+#-------------------------------------------------------------------------------
 if __name__ == "__main__":
-	confirm_continue()
-	message_bold("Example message bold")
-	message_big([
-		"EXAMPLE MESSAGE BIG:",
-		"Yo dog wadup"
-	])
-	warning("warning")
-	error("error")
-	error_bold("Example error bold")
-	error_big([
-		"EXAMPLE ERROR BIG:",
-		"You fucked up!"
-	])
-	error_big([
-		'EXAMPLE ERROR BIG:',
-		'Some really long error message that will be more than the number of',
-		' lines than is in the box space.',
-	])
-	error_big([
-		"EXAMPLE ERROR BIG:",
-		"Some really long error message that will be more than the number of lines than is in the box space."
-	])
-	debug("debug")
-	success("success")
-	message("message")
-	message("message with line 80", line=True)
-	message("message with line 81", line=True, line_count=81)
-	message("message with line 82", line=True, line_count=82)
-	message("message with line 83", line=True, line_count=83)
-	message("message with line 83 but really long message", line=True, line_count=83)
-	message("really long message but really short line", line=True, line_count=40)
-	message("message with line 80 but with = charachters", line=True, line_char="=")
-	message("message with line 80 but with * charachters", line=True, line_char="*")
-	message("message with line 80 but with '.-' charachters", line=True, line_char=".-")
-	message("really long message but really short line and '.-' charachters",
-		line=True, line_count=40, line_char=".-")
-	message("really long message message with line 80 but with '.-' charachters and pad top only",
-		line=True, line_char=".-", pad_top=True)
-	message("message with line 80", line=True)
-	message("message with line 80 pad top only", line=True, pad_top=True)
-	message("message with line 80", line=True)
-	message("message with line 80", line=True)
-	message("message with line 80 pad both top and bottom", line=True, pad=True)
-	message("message with line 80", line=True)
-	message("message with line 80", line=True)
-	message("message with line 80", line=True)
-	warning("warning with line 80 pad top only", line=True, pad_top=True)
-	error("error with line 80", line=True)
-	error("error with line 80 pad both top and bottom", line=True, pad=True)
-	success("success with line 80", line=True)
-	debug("debug with line 80", line=True)
+	import os
+	install_error = os.system("cd .. && sudo sh install.sh")
+	if install_error:
+		print("ERROR re-installing rs_utils.")
+	else:
+		os.system("python3 ../tests/logger.py")

@@ -16,6 +16,7 @@ def POPULATE_FILE_STEP_ONE(**kwargs):
 		with open(filename, "a") as f:
 			for i in range(10):
 				f.write("Populating line: " + str(i) + "\n")
+
 		response.ERROR = False
 		return response
 	except Exception as ex:
@@ -145,7 +146,7 @@ rsi.register_process({
 	"stop_on_error": True,
 })
 
-# POPULATE_FILE_STEP_ONE 
+# POPULATE_FILE_STEP_ONE
 #	Populate "file_step_one.txt" with a custom function.
 rsi.register_process({
 	"name": "POPULATE_FILE_STEP_ONE",
@@ -165,7 +166,7 @@ rsi.register_process({
 	"stop_on_error": True,
 })
 
-# COPY_FILE_STEP_ONE_TO_STEP_TWO 
+# COPY_FILE_STEP_ONE_TO_STEP_TWO
 #	Copy the file "file_step_one.txt" to "file_step_two.txt".
 rsi.register_process({
 	"name": "COPY_FILE_STEP_ONE_TO_STEP_TWO",

@@ -18,8 +18,6 @@ class _RSIProcess:
 
 	require_confirmation = False 
 
-	stop_on_error = True
-
 
 	def __init__(self,
 		name = None,
@@ -29,8 +27,7 @@ class _RSIProcess:
 		step = None,
 		step_args = {},
 		next_process = None,
-		require_confirmation = None,
-		stop_on_error = True,
+		require_confirmation = False,
 		):
 
 		# Assign vals to self attributes.
@@ -47,20 +44,20 @@ class _RSIProcess:
 
 		self.require_confirmation = require_confirmation 
 
-		self.stop_on_error = stop_on_error
-
 	def run(self):
+
 		# Print a big, padded, bold message for each step.
 		logger.message_big([
 			"Running Itterator Step:",
 			self.name,
 		])
+
 		# Before running the step, check if we should get confirmation.
 		if self.require_confirmation == True:
 			logger.confirm_continue()
+
 		# We might get an "rs_step" or just a regular step that's a function.
 		# We'll checkfor the rs_step_cmd.
-		response = None
 		if self.rs_step_cmd is not None:
 			response = runner.step(
 				self.rs_step_cmd,
@@ -80,10 +77,6 @@ class _RSIProcess:
 					logger.error(response.STDERR)
 				else:
 					logger.error_bold("No stderr from last response:")
-				"""
-				if self.stop_on_error == True:
-					raise SystemExit
-				"""
 		elif self.step is not None:
 			try:
 				response = self.step(
@@ -98,9 +91,26 @@ class _RSIProcess:
 				# Print the exception message string.
 				logger.error_bold("Last procedure exception:")
 				logger.error_bold(str(ex))
+				response.ERROR = True
+				response.ERROR_MSG = str(ex)
+
+		# Make sure the step registered returns a response.
+		# If it doesn't, that's a problem worth an actual ERROR
+		if type(response).__name__ != "Response":
+			response = Response()
+			response.ERROR = True
+			err_msg = (
+				"""Iterator error. Step return '%s' type object."""
+				"""Exepected rsutls.response.Response object.""" % (
+					type(response).__name__
+				)
+			)
+			logger.error_big(err_msg)
+			response.ERROR_MSG = (err_msg)
+
 		return {
 			"next_process": self.next_process,
-			"response": response
+			"response": response,
 		}
 
 class Itterator:
@@ -113,7 +123,7 @@ class Itterator:
 
 	# Target processes and response.
 	target_process = None
-	target_process_responses = {}
+	process_responses = {}
 
 	def __init__(self):
 		logger.message_big([
@@ -152,9 +162,6 @@ class Itterator:
 			# specify confirmation requirment.
 			require_confirmation = process["require_confirmation"]
 				if "require_confirmation" in process else None,
-			# specify stop_on_error option.
-			stop_on_error = process["stop_on_error"]
-				if "stop_on_error" in process else None,
 		)
 
 		# Check if the process is the "start_process".
@@ -187,328 +194,78 @@ class Itterator:
 						+ "Check that you haven't mispelled the process name.")
 
 	def run(self):
+		response = Response()
 		try:
-			self._run_pre_flight_checks()
+			try:
+				self._run_pre_flight_checks()
+			except Exception as ex:
+				logger.error_big([
+					"Invalid itterator step configuration:",
+					str(ex)
+				])
+				raise SystemExit
+
+			logger.message("Running itterator...", line=True)
+			if self.start_process is None:
+				err_msg = "Error: Could not start itterator: No start_process specified."
+				raise Exception(err_msg)
+
+			self.target_process = self.start_process
+
+			while True:
+				# Get the process run result. It has:
+				#	1) response
+				#	2) next_process
+				process_result = self.target_process.run()
+
+				# Log the target_process response keyed by the process name.
+				target_process_response = process_result["response"]
+				self.process_responses[self.target_process.name] = target_process_response
+
+				# Get conditions from next_process
+				next_process = process_result["next_process"]
+
+				# If the next process is none, we're done.
+				if next_process is None:
+					done = "All processes complete."
+					logger.message(done, line=True)
+					# Set the DATA to be all process_responses.
+					# target_process_response.DATA = self.process_responses
+					return target_process_response
+
+				# Find the next process with matching conditions.
+				for process_name, conditions in next_process.items():
+					false_condition = False
+					for condition, value in conditions.items():
+						if target_process_response.__dict__[condition] != value:
+							false_condition = True
+					if false_condition == False:
+						self.target_process = self.processes[process_name]
+
+				# Populate the target_process template_values at runtime.
+				if self.target_process.rs_step_args is not None:
+					rs_step_args = self.target_process.rs_step_args
+					if "template_vars" in rs_step_args:
+						template_vars = rs_step_args["template_vars"]
+						for template_var_name, template_var_info in template_vars.items():
+							from_step = template_var_info["from_step"]
+							step_process = self.process_responses[from_step]
+							data_key = template_var_info["data_key"]
+							value = step_process.DATA[data_key]
+							self.target_process.rs_step_args["template_vars"][template_var_name]["value"] = value
 		except Exception as ex:
-			logger.error_big([
-				"Invalid itterator step configuration:",
-				str(ex)
-			])
-			raise SystemExit
+			logger.error(str(ex))
+			response.ERROR = True
+			response.ERROR_MSG = str(ex)
+			return response
 
-		logger.message("Running itterator...", line=True)
-		if self.start_process is None:
-			logger.error("Error: Could not start itterator with no start_process.")
-			return
-
-		self.target_process = self.start_process
-
-		while True:
-			# Get the process run result. It has:
-			#	1) response
-			#	2) next_process
-			process_result = self.target_process.run()
-
-			# Log the target_process response keyed by the process name.
-			target_process_response = process_result["response"]
-			self.target_process_responses[self.target_process.name] = target_process_response
-
-			# Get conditions from next_process
-			next_process = process_result["next_process"]
-
-			# If the next process is none, we're done.
-			if next_process is None:
-				logger.message("All processes complete.")
-				return False
-
-			# Find the next process with matching conditions.
-			for process_name, conditions in next_process.items():
-				false_condition = False
-				for condition, value in conditions.items():
-					if target_process_response.__dict__[condition] != value:
-						false_condition = True
-				if false_condition == False:
-					self.target_process = self.processes[process_name]
-
-			# Populate the target_process template_values at runtime.
-			if self.target_process.rs_step_args is not None:
-				rs_step_args = self.target_process.rs_step_args
-				if "template_vars" in rs_step_args:
-					template_vars = rs_step_args["template_vars"]
-					for template_var_name, template_var_info in template_vars.items():
-						from_step = template_var_info["from_step"]
-						step_process = self.target_process_responses[from_step]
-						data_key = template_var_info["data_key"]
-						value = step_process.DATA[data_key]
-						self.target_process.rs_step_args["template_vars"][template_var_name]["value"] = value
-
-# Unit test.
+#-------------------------------------------------------------------------------
+# Unit tests.
+#-------------------------------------------------------------------------------
 if __name__ == "__main__":
-
-	# Example non rs_step process with args and possible failure.
-	def POPULATE_FILE_STEP_ONE(**kwargs):
-		response = Response()
-		try:
-			if "filename" not in kwargs:
-				raise Exception("Invalid POPULATE_FILE_STEP_ONE call: 'filename' not provided")
-			filename = kwargs["filename"]
-			import os
-			if os.path.exists(filename) == False:
-				raise Exception("Invalid POPULATE_FILE_STEP_ONE call: file '" + filename + "' does not exist.")
-			with open(filename, "a") as f:
-				for i in range(10):
-					f.write("Populating line: " + str(i) + "\n")
-
-			response.ERROR = False
-			return response
-		except Exception as ex:
-			response.ERROR = True
-			response.ERROR_MSG = str(ex)
-			return response
-
-	# Example non rs_step process (more complex).
-	def PROCESS_FILE_STEP_TWO(**kwargs):
-		response = Response()
-		try:
-			if "filename" not in kwargs:
-				raise Exception("Invalid PROCESS_FILE_STEP_TWO call: 'filename' not provided")
-			filename = kwargs["filename"]
-			import os
-			if os.path.exists(filename) == False:
-				raise Exception("Invalid PROCESS_FILE_STEP_TWO call: file '" + filename + "' does not exist.")
-			with open(filename, "r") as f:
-				lines = f.readlines()
-			import json
-			obj = {}
-			for i in range(len(lines)):
-				obj["line_" + str(i)] = lines[i]
-			obj_json = json.dumps(obj)
-			with open("FINAL_REPORT.json", "w") as f:
-				f.write(obj_json)
-			response.ERROR = False
-			return response
-		except Exception as ex:
-			response.ERROR = True
-			response.ERROR_MSG = str(ex)
-			return response
-
-	# Example non rs_step process (print data from FINAL_REPORT.json file).
-	def PRINT_FINAL_REPORT(**kwargs):
-		response = Response()
-		try:
-			if "filename" not in kwargs:
-				raise Exception("Invalid PRINT_FINAL_REPORT call: 'filename' not provided")
-			filename = kwargs["filename"]
-			import os
-			if os.path.exists(filename) == False:
-				raise Exception("Invalid PRINT_FINAL_REPORTcall: file '" + filename + "' does not exist.")
-			with open(filename, "r") as f:
-				raw_data = f.read()
-			import json
-			data = json.loads(raw_data)
-			logger.success("FINAL REPORT:", line=True, line_char="*")
-			import pprint as pp
-			pp.pprint(data)
-			response.ERROR = False
-			return response
-		except Exception as ex:
-			response.ERROR = True
-			response.ERROR_MSG = str(ex)
-			return response
-
-	# Commonly used cleanup procedures.
-
-	cleanup_file_step_one_cmd = "rm file_step_one.txt"
-	cleanup_file_step_one_msg = "Cleaning up, removing file_step_one.txt."
-
-	cleanup_file_step_two_cmd = "rm file_step_two.txt && rm file_step_two.txt.json"
-	cleanup_file_step_two_msg = "Cleaning up, removing file_step_two.txt."
-
-	# Create the ittorator.
-
-	rsi = Itterator()
-
-	# CLEAN_UP_FILE_STEP_ONE.
-	# 	Create a file called "file_step_one.txt".
-	rsi.register_process({
-		"name": "CLEAN_UP_FILE_STEP_ONE",
-		"rs_step_cmd": cleanup_file_step_one_cmd,
-		"rs_step_msg": cleanup_file_step_one_msg,
-		"next_process": None,
-		"stop_on_error": True,
-	})
-
-	# CLEAN_UP_FILE_STEP_TWO.
-	# 	Create a file called "file_step_one.txt".
-	rsi.register_process({
-		"name": "CLEAN_UP_FILE_STEP_TWO",
-		"rs_step_cmd": cleanup_file_step_two_cmd,
-		"rs_step_msg": cleanup_file_step_two_msg,
-		"next_process": None,
-		"stop_on_error": True,
-	})
-
-	# CREATE_FILE_STEP_ONE.
-	# 	Create a file called "file_step_one.txt".
-	rsi.register_process({
-		"name": "CREATE_FILE_STEP_ONE",
-		"rs_step_cmd": "touch file_step_one.txt",
-		"rs_step_msg": "Creating file_step_one.txt",
-		"rs_step_args": {
-			"cmd_log": True,
-			"cmd_return": True,
-		},
-		"start_process": True,
-		"next_process": {
-			"ECHO_TO_FILE_STEP_ONE": {
-				"ERROR": False,
-			},
-			"CLEAN_UP_FILE_STEP_ONE": {
-				"ERROR": True,
-			},
-		},
-		"stop_on_error": True,
-	})
-
-	# ECHO_TO_FILE_STEP_ONE
-	#	Add 'something' to "file_step_one.txt".
-	rsi.register_process({
-		"name": "ECHO_TO_FILE_STEP_ONE",
-		# "rs_step_cmd": "echob 'something' >> file_step_one.txt", # Test using an invalid command.
-		"rs_step_cmd": "echo 'something' >> file_step_one.txt",
-		"rs_step_msg": "Echoing to file_step_one.txt",
-		"next_process": {
-			"POPULATE_FILE_STEP_ONE": {
-				"ERROR": False,
-			},
-			"CLEAN_UP_FILE_STEP_ONE": {
-				"ERROR": True,
-			},
-		},
-		"stop_on_error": True,
-	})
-
-	# POPULATE_FILE_STEP_ONE 
-	#	Populate "file_step_one.txt" with a custom function.
-	rsi.register_process({
-		"name": "POPULATE_FILE_STEP_ONE",
-		"step": POPULATE_FILE_STEP_ONE,
-		"step_args": {
-			# "filename": "file_step_ones.txt" # Test using an invalid filename.
-			"filename": "file_step_one.txt"
-		},
-		"next_process": {
-			"COPY_FILE_STEP_ONE_TO_STEP_TWO": {
-				"ERROR": False,
-			},
-			"CLEAN_UP_FILE_STEP_ONE": {
-				"ERROR": True,
-			},
-		},
-		"stop_on_error": True,
-	})
-
-	# COPY_FILE_STEP_ONE_TO_STEP_TWO 
-	#	Copy the file "file_step_one.txt" to "file_step_two.txt".
-	rsi.register_process({
-		"name": "COPY_FILE_STEP_ONE_TO_STEP_TWO",
-		# "rs_step_cmd": "cp file_step_ones.txt file_step_two.txt", # Test using an invalid filename.
-		"rs_step_cmd": "cp file_step_one.txt file_step_two.txt",
-		"rs_step_msg": "Copying file_step_one.txt to file_step_two.txt",
-		"next_process": {
-			"DELETE_FILE_STEP_ONE": {
-				"ERROR": False,
-			},
-			"CLEAN_UP_FILE_STEP_ONE": {
-				"ERROR": True,
-			},
-		},
-		"stop_on_error": True,
-	})
-
-	# DELETE_FILE_STEP_ONE.
-	#	Delete the file "file_step_one.txt".
-	rsi.register_process({
-		"name": "DELETE_FILE_STEP_ONE",
-		"rs_step_cmd": "rm file_step_one.txt",
-		"rs_step_msg": "Deleting file_step_one.txt",
-		"next_process": {
-			"PROCESS_FILE_STEP_TWO": {
-				"ERROR": False,
-			},
-			"CLEAN_UP_FILE_STEP_ONE": {
-				"ERROR": True,
-			},
-		},
-		"stop_on_error": True,
-	})
-
-	# PROCESS_FILE_STEP_TWO.
-	#	Delete the file "file_step_one.txt".
-	rsi.register_process({
-		"name": "PROCESS_FILE_STEP_TWO",
-		"step": PROCESS_FILE_STEP_TWO,
-		"step_args": {
-			"filename": "file_step_two.txt"
-		},
-		# "require_confirmation": True, # Test requiring confirmation to continue.
-		"next_process": {
-			"DELETE_FILE_STEP_TWO": {
-				"ERROR": False,
-			},
-			"CLEAN_UP_FILE_STEP_TWO": {
-				"ERROR": True,
-			},
-		},
-		"stop_on_error": True,
-	})
-
-	# DELETE_FILE_STEP_TWO.
-	#	Delete the file "file_step_one.txt".
-	rsi.register_process({
-		"name": "DELETE_FILE_STEP_TWO",
-		"rs_step_cmd": "rm file_step_two.txt",
-		"rs_step_msg": "Deleting file_step_two.txt",
-		"next_process": {
-			"PRINT_FINAL_REPORT": {
-				"ERROR": False,
-			},
-			"CLEAN_UP_FILE_STEP_TWO": {
-				"ERROR": True,
-			},
-		},
-		"stop_on_error": True,
-	})
-
-	# PRINT_FINAL_REPORT.
-	#	Delete the file "file_step_one.txt".
-	rsi.register_process({
-		"name": "PRINT_FINAL_REPORT",
-		"step": PRINT_FINAL_REPORT,
-		"step_args": {
-			"filename": "FINAL_REPORT.json"
-		},
-		"next_process": {
-			"DELETE_FINAL_REPORT": {
-				"ERROR": False,
-			},
-			"CLEAN_UP_FILE_STEP_TWO": {
-				"ERROR": True,
-			},
-		},
-		"stop_on_error": True,
-	})
-
-	# DELETE_FINAL_REPORT.
-	#	Delete the file "file_step_one.txt".
-	rsi.register_process({
-		"name": "DELETE_FINAL_REPORT",
-		"name": "DELETE_FINAL_REPORT",
-		"rs_step_cmd": "rm FINAL_REPORT.json",
-		"rs_step_msg": "Deleting final report.",
-		"require_confirmation": True,
-		"stop_on_error": True,
-	})
-
-	# Run the itterator.
-	rsi.run()
+	import os
+	install_error = os.system("cd .. && sudo sh install.sh")
+	if install_error:
+		print("ERROR re-installing rs_utils.")
+	else:
+		os.system("python3 ../tests/itterator.py")

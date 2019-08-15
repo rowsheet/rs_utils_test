@@ -1,0 +1,8 @@
+{
+	"HOST_PORT": 9996,
+	"CONTAINER_PORT": 9996,
+	"SERVICE_NAME": "example_broken_entrypoint_service",
+	"CONTAINER_NAME": "example_broken_entrypoint_container",
+	"IMAGE_NAME": "example_broken_entrypoint_image",
+	"DOCKERFILE_PATH": "."
+}

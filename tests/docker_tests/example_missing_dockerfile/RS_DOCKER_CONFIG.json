@@ -1,0 +1,8 @@
+{
+	"HOST_PORT": 9998,
+	"CONTAINER_PORT": 9998,
+	"SERVICE_NAME": "example_missing_dockerfile_service",
+	"CONTAINER_NAME": "example_missing_dockerfile_container",
+	"IMAGE_NAME": "example_missing_dockerfile_image",
+	"DOCKERFILE_PATH": "."
+}
