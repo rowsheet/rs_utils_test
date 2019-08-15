@@ -13,7 +13,10 @@ def _run_test(test_name, test, test_function):
 	logger.debug("%s: Running..." % test_name)
 	actual = test["actual"]()
 	should = test["should"]
-	return test_function(actual, should)
+	cleanup = None
+	if "cleanup" in test:
+		cleanup = test["cleanup"]
+	return test_function(actual, should, cleanup)
 
 def run(tests, test_function):
 	summary = {}

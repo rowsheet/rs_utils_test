@@ -1,5 +1,6 @@
 from rs_utils import docker
 from rs_utils import logger 
+from rs_utils import runner 
 from rs_utils import unit_test 
 from rs_utils.unit_test import TestResult
 import os
@@ -15,13 +16,17 @@ rs_util_dev_path = os.environ['RS_UTIL_DEV_PATH']
 Define the test function.
 """
 
-def test(actual, should):
+def test(actual, should, cleanup):
 	if actual.ERROR != should["ERROR"]:
+		if cleanup is not None:
+			cleanup()
 		return TestResult(
 			PASSED=False,
 			ERROR_MSG=actual.ERROR_MSG
 		)
 	else:
+		if cleanup is not None:
+			cleanup()
 		return TestResult(
 			PASSED=True,
 		)
@@ -44,9 +49,12 @@ tests = {
 		"should": {
 			"ERROR": False
 		},
+		"cleanup": lambda: runner.step(
+			"docker service rm example_service",
+			"Cleaning up example_service"
+		),
 	},
 	"Example Missing Dockerfile": {
-		"run": True,
 		"actual": lambda: docker.start_service(
 			os.path.join(
 				rs_util_dev_path,
@@ -58,9 +66,12 @@ tests = {
 		"should": {
 			"ERROR": True 
 		},
+		"cleanup": lambda: runner.step(
+			"docker service rm example_missing_dockerfile_service",
+			"Cleaning up example_service"
+		),
 	},
 	"Example Missing Entrypoint": {
-		"run": True,
 		"actual": lambda: docker.start_service(
 			os.path.join(
 				rs_util_dev_path,
@@ -72,9 +83,13 @@ tests = {
 		"should": {
 			"ERROR": True 
 		},
+		"cleanup": lambda: runner.step(
+			"docker service rm example_missing_entrypoint_service",
+			"Cleaning up example_service"
+		),
 	},
 	"Example Broken Entrypoint": {
-		"run": False,
+		"skip": True,
 		"actual": lambda: docker.start_service(
 			os.path.join(
 				rs_util_dev_path,
@@ -86,6 +101,10 @@ tests = {
 		"should": {
 			"ERROR": True 
 		},
+		"cleanup": lambda: runner.step(
+			"docker service rm example_broken_entrypoint_service",
+			"Cleaning up example_service"
+		),
 	},
 }
 
