@@ -37,8 +37,9 @@ class RSObject(object):
 			self._validate_test_file_path(test_file_path)
 			parsed_groups = self._parse_groups(test_groups)
 			logger.message_big("Starting unit tests...")
-			logger.warning("GROUPS:")
-			logger.warning(parsed_groups)
+			if parsed_groups != "":
+				logger.message("Only running test for groups: '%s'" %
+					parsed_groups)
 			os.system("python3 %s %s" % (
 					test_file_path,
 					parsed_groups,
