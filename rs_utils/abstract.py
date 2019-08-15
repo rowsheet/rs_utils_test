@@ -1,4 +1,5 @@
 import os
+import traceback
 from rs_utils import logger 
 
 class RSObject(object):
@@ -27,6 +28,15 @@ class RSObject(object):
 			)
 
 	def _parse_groups(self, test_groups):
+
+		# Fix parsing from CLI args from fire.
+		# Sometimes it's a tuple, sometimes it's a string.
+
+		if type(test_groups).__name__ == "tuple":
+			test_groups = ",".join(list(test_groups))
+
+		# Process the csv again, but this time filter empty ones.
+
 		if test_groups is not None:
 			return ",".join(list(filter(lambda x: x != "", test_groups.split(","))))
 		return ""
@@ -50,6 +60,7 @@ class RSObject(object):
 				"Error re-installing module on unit test:",
 				str(ex)
 			])
+			traceback.print_tb(ex.__traceback__)
 			raise SystemExit(1)
 
 #-------------------------------------------------------------------------------
