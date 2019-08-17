@@ -156,6 +156,16 @@ def _test_in_group(test, groups, test_name):
 				return True
 	return False
 
+def _check_unset_argv_groups(argv):
+	if argv == "NOT_SET":
+		logger.warning("UNIT TEST WARNING", line=True)
+		logger.warning("Groups are not being set to unit test. Unitialize tests like:")
+		logger.debug("\tunit_test.run(tests, test, sys.argv)", pad=True)
+		logger.warning("to enable grouping with unit tests")
+		logger.warning("", line=True)
+		return None
+	return argv
+
 """
 Running tests uses this function in unit test files.
 Test files should be able to be run by simply running:
@@ -177,9 +187,15 @@ Tests can also be skipped if in the test definition, iether:
 
 Tests are run with "skip" => False and "run" => True by default.
 """
-def run(tests=None, test_function=None, argv=None):
+def run(tests=None, test_function=None, argv="NOT_SET"):
+
+	# If you forget to set sys.argv in the unit test file, you won't
+	# be able to use grouping in unit tests. Raisea warning.
+	argv = _check_unset_argv_groups(argv)
+
 	summary = {}
 	groups = _parse_groups(argv, skip_first_arg=True)
+
 	try:
 		for test_name, test in tests.items():
 			"""
@@ -215,6 +231,9 @@ def run(tests=None, test_function=None, argv=None):
 			summary[test_name] = test_result
 		logger.message_big("Test Summary:")
 		for test_name, test_result in summary.items():
+			if test_result is None:
+				logger.error("Test error: Test result is None. Make sure test function returns a TestResult.")
+				continue
 			if test_result.SKIPPED == True:
 				logger.warning("%s: Test skipped." % test_name)
 			elif test_result.PASSED == True:
