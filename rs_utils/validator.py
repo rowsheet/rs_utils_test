@@ -1,6 +1,11 @@
+import fire
 import json
+from rs_utils.abstract import RSObject
 
-class Validator:
+from rs_utils import logger
+import traceback 
+
+class Validator(RSObject):
 
 	ARGS = {}
 	ARG_ERRORS = {}
@@ -64,56 +69,166 @@ class Validator:
 			"Invalid arguments: %s" % str(ERROR_DATA)
 		)
 
+	def _validate_condition(self, param_name, condition, **kwargs):
+		try:
+			"""
+			The param value might be passed a function, but
+			it doesn't necessarily mean it's required. If we
+			declare it as None now, condition functions will
+			have to check for NoneType. Instead, we can just
+			call condition() without any parameters if the
+			param_name is not in kwargs, that way condition
+			functions can just check:
+
+				if param is None:
+			"""
+			param_value = None
+			if param_name in kwargs:
+				param_value = kwargs[param_name]
+			
+				response = condition(param_value)
+			else:
+				response = condition()
+			if type(response).__name__ == "Response":
+				if response.ERROR == True:
+					raise Exception(
+						response.STDERR
+					)
+		except Exception as ex:
+			self.add_error(
+				param_name,
+				"Invalid param '%s': %s" % (
+					param_name,
+					str(ex)
+				)
+			)
+
+	def _validate_active_group(self, 
+			active_groups,
+			param_name,
+			condition,
+			**kwargs
+		):
+		if "group" not in condition:
+			raise Exception("Recieved group condition, but no " +
+				"'group' name provided. Must pass 'group' to " +
+				"condition dict.")
+		if "condition" not in condition:
+			raise Exception("Recieved group condition, but no " +
+				"'condition' function provided. Must pass " +
+				"'condition' to condition dict.")
+		if active_groups is None:
+			raise Exception("active_groups is None for some reason.")	
+		group = condition["group"]
+		if group in active_groups:
+			if active_groups[group] == True:
+				if param_name not in kwargs:
+					raise Exception(("""Active group is '%s', """ +
+					"""but param '%s' in that group was not passed """ +
+					"""as a parameter.""") % (
+						group, 
+						param_name
+					))
+				else:
+					self._validate_condition(
+						param_name,
+						condition["condition"],
+						**kwargs
+					)
+
+	"""
+	First, go through ARG_CONFIG and find the distict groups.
+
+	Next, Go through the ARG_CONFIG and **kwargs and see which **kwargs are not
+	None. If they're not none, find the group that param_name is part of and
+	mark the gropu as active.
+	"""
+	def _parse_active_groups(self, ARG_CONFIG, **kwargs):
+		"""
+		Find distinct groups.
+		"""
+		grouped_params = []
+		grouped_params = list(
+			filter(
+				lambda key:
+				type(ARG_CONFIG[key]).__name__ == "dict",
+				[
+					key for key, val in ARG_CONFIG.items()
+				]
+			)
+		)
+		"""
+		Find groups that are active, indicated by params being passed
+		in kwargs.
+		"""
+		active_groups = {}
+		for grouped_param in grouped_params:
+			if grouped_param in kwargs:
+				active_groups[ARG_CONFIG[grouped_param]["group"]] = True
+		return active_groups
+
 	"""
 	kwargs for validation params:
 		True 	 => required.
 		function => raise exception means invalid, capture str(ex).
 	"""
 	def validate(self, ARG_CONFIG={}, **kwargs):
+		"""
+		Track the active group condition if it exists.
+		"""
+		active_groups = self._parse_active_groups(
+			ARG_CONFIG=ARG_CONFIG,
+			**kwargs,
+		)
 		for param_name, condition in ARG_CONFIG.items():
+			"""
+			Check if condition passed is a method of function.
+			"""
 			if (
 				(type(condition).__name__ == "method") or
 				(type(condition).__name__ == "function")
 			):
-				try:
-					"""
-					The param value might be passed a function, but
-					it doesn't necessarily mean it's required. If we
-					declare it as None now, condition functions will
-					have to check for NoneType. Instead, we can just
-					call condition() without any parameters if the
-					param_name is not in kwargs, that way condition
-					functions can just check:
-
-						if param is None:
-					"""
-					param_value = None
-					if param_name in kwargs:
-						param_value = kwargs[param_name]
-					
-						response = condition(param_value)
-					else:
-						response = condition()
-					if type(response).__name__ == "Response":
-						if response.ERROR == True:
-							raise Exception(
-								response.STDERR
-							)
-				except Exception as ex:
-					self.add_error(
-						param_name,
-						"Invalid param '%s': %s" % (
-							param_name,
-							str(ex)
-						)
-					)
-			# Check if required.
+				self._validate_condition(
+					param_name,
+					condition,
+					**kwargs,
+				)
+			"""
+			Check if condition is part of a group. If any members of
+			the group are present, they're all required per their
+			conditions.
+			"""
+			if type(condition).__name__ == "dict":
+				self._validate_active_group(
+					active_groups,
+					param_name,
+					condition,
+					**kwargs
+				)
+			"""
+			Check if condition passed is 'True', this means it's
+			required.
+			"""
 			if condition == True:
 				if param_name not in kwargs:
 					self.add_error(
 						param_name,
 						"'%s' is required." % param_name
 					)
+
+	#-----------------------------------------------------------------------
+	# UNIT TESTS (PUBLIC)
+	#-----------------------------------------------------------------------
+
+	def test(self,
+			test_groups=None,
+			test_file_path="../tests/validator.py",
+		):
+		self._test(
+			test_file_path=test_file_path,
+			test_groups=test_groups,
+		)
+
 
 def VALIDATE(
 		ARG_CONFIG=None,
@@ -128,13 +243,8 @@ def VALIDATE(
 		**kwargs
 	)
 
-#-------------------------------------------------------------------------------
-# Unit tests.
-#-------------------------------------------------------------------------------
-if __name__ == "__main__":
-	import os
-	install_error = os.system("cd .. && sudo sh install.sh")
-	if install_error:
-		print("ERROR re-installing rs_utils.")
-	else:
-		os.system("python3 ../tests/validator.py")
+def main():
+	fire.Fire(Validator())
+
+if __name__ == '__main__':
+	main()

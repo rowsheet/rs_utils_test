@@ -53,15 +53,51 @@ def assert_optional_int(val=None):
 	if type(val).__name__ != "int":
 		raise Exception("Value is not an int.")
 
+def assert_gcloud_machine_type(val=None):
+	if val == "gmt_1" or val == "gmt_2":
+		return
+	raise Exception("Invalid assert gcloud machine type.")
+
+def assert_gcloud_compute_zone(val=None):
+	if val == "gcz_1" or val == "gcz_2":
+		return
+	raise Exception("Invalid assert gcloud compute zone.")
+
+def assert_gcloud_project_id(val=None):
+	if val == "gpi_1" or val == "gpi_2":
+		return
+	raise Exception("Invalid assert gcloud project id.")
+
+def assert_aws_machine_type(val=None):
+	if val == "amt_1" or val == "amt_2":
+		return
+	raise Exception("Invalid assert aws machine type.")
+
+def assert_aws_compute_zone(val=None):
+	if val == "acz_1" or val == "acz_2":
+		return
+	raise Exception("Invalid assert aws compute zone.")
+
+def assert_aws_project_id(val=None):
+	if val == "api_1" or val == "api_2":
+		return
+	raise Exception("Invalid assert aws project id.")
+
+
 """
 Define the test function.
 """
 
 def test(actual, should, cleanup=None):
 	if actual.ERROR != should["ERROR"]:
+		"""
+		from rs_utils import logger
+		logger.error("STDERR:")
+		logger.error(actual.STDERR)
+		"""
 		return TestResult(
 			PASSED=False,
-			ERROR_MSG=actual.ERROR_MSG
+			ERROR_MSG=actual.STDERR
 		)
 	else:
 		if actual.ERROR == True:
@@ -72,11 +108,12 @@ def test(actual, should, cleanup=None):
 						ERROR_MSG="Should data mismatch, actual: '%s'" %
 							actual.STDERR,
 					)
-			"""
-			from rs_utils import logger 
-			logger.error("actual.STDERR:")
-			logger.error(actual.STDERR)
-			"""
+				else:
+					"""
+					from rs_utils import logger 
+					logger.error("STDERR:")
+					logger.error(actual.STDERR)
+					"""
 		return TestResult(
 			PASSED=True,
 		)
@@ -285,6 +322,196 @@ tests = {
 				"foo": "Invalid param 'foo': Value is not a string."
 			},indent=4),
 		},
+	},
+	"Arg groups (VALID, No active groups)": {
+		"run": True,
+		"actual": lambda: run_validator(
+			ARG_CONFIG = {
+				"foo": assert_str,
+				"bar": assert_str,
+				"baz": assert_str,
+				"gcloud_machine_type": {
+					"group": "gcloud",
+					"condition": assert_gcloud_machine_type,
+				},
+				"gcloud_compute_zone": {
+					"group": "gcloud",
+					"condition": assert_gcloud_compute_zone,
+				},
+				"gcloud_project_id": {
+					"group": "gcloud",
+					"condition": assert_gcloud_project_id,
+				},
+				"aws_machine_type": {
+					"group": "aws",
+					"condition": assert_aws_machine_type,
+				},
+				"aws_compute_zone": {
+					"group": "aws",
+					"condition": assert_aws_compute_zone,
+				},
+				"aws_compute_project_id": {
+					"group": "aws",
+					"condition": assert_aws_project_id,
+				},
+			},
+			EXCEPTION_FUNCTION = custom_exception_function,
+			# Pass kwargs.
+			foo = "a string",
+			bar = "a string",
+			baz = "a string",
+		),
+		"should": {
+			"ERROR": False,
+		},
+		"group": "arg_groups",
+	},
+	"Arg groups (VALID, gcloud active groups)": {
+		"run": True,
+		"actual": lambda: run_validator(
+			ARG_CONFIG = {
+				"foo": assert_str,
+				"bar": assert_str,
+				"baz": assert_str,
+				"gcloud_machine_type": {
+					"group": "gcloud",
+					"condition": assert_gcloud_machine_type,
+				},
+				"gcloud_compute_zone": {
+					"group": "gcloud",
+					"condition": assert_gcloud_compute_zone,
+				},
+				"gcloud_project_id": {
+					"group": "gcloud",
+					"condition": assert_gcloud_project_id,
+				},
+				"aws_machine_type": {
+					"group": "aws",
+					"condition": assert_aws_machine_type,
+				},
+				"aws_compute_zone": {
+					"group": "aws",
+					"condition": assert_aws_compute_zone,
+				},
+				"aws_compute_project_id": {
+					"group": "aws",
+					"condition": assert_aws_project_id,
+				},
+			},
+			EXCEPTION_FUNCTION = custom_exception_function,
+			# Pass kwargs.
+
+			gcloud_machine_type = "gmt_1",
+			gcloud_compute_zone = "gcz_1",
+			gcloud_project_id = "gpi_1",
+
+			foo = "a string",
+			bar = "a string",
+			baz = "a string",
+
+			json = True,
+		),
+		"should": {
+			"ERROR": False,
+		},
+		"group": "arg_groups",
+	},
+	"Arg groups (INVALID, gcloud active groups, missing machine-type)": {
+		"run": True,
+		"actual": lambda: run_validator(
+			ARG_CONFIG = {
+				"foo": assert_str,
+				"bar": assert_str,
+				"baz": assert_str,
+				"gcloud_machine_type": {
+					"group": "gcloud",
+					"condition": assert_gcloud_machine_type,
+				},
+				"gcloud_compute_zone": {
+					"group": "gcloud",
+					"condition": assert_gcloud_compute_zone,
+				},
+				"gcloud_project_id": {
+					"group": "gcloud",
+					"condition": assert_gcloud_project_id,
+				},
+				"aws_machine_type": {
+					"group": "aws",
+					"condition": assert_aws_machine_type,
+				},
+				"aws_compute_zone": {
+					"group": "aws",
+					"condition": assert_aws_compute_zone,
+				},
+				"aws_compute_project_id": {
+					"group": "aws",
+					"condition": assert_aws_project_id,
+				},
+			},
+			EXCEPTION_FUNCTION = custom_exception_function,
+			# Pass kwargs.
+
+			gcloud_compute_zone = "gcz_1",
+			gcloud_project_id = "gpi_1",
+
+			foo = "a string",
+			bar = "a string",
+			baz = "a string",
+		),
+		"should": {
+			"ERROR": True,
+			"DATA": "Active group is 'gcloud', but param 'gcloud_machine_type' in that group was not passed as a parameter.",
+		},
+		"group": "arg_groups",
+	},
+	"Arg groups (INVALID, gcloud active groups, invalid machine-type)": {
+		"run": True,
+		"actual": lambda: run_validator(
+			ARG_CONFIG = {
+				"foo": assert_str,
+				"bar": assert_str,
+				"baz": assert_str,
+				"gcloud_machine_type": {
+					"group": "gcloud",
+					"condition": assert_gcloud_machine_type,
+				},
+				"gcloud_compute_zone": {
+					"group": "gcloud",
+					"condition": assert_gcloud_compute_zone,
+				},
+				"gcloud_project_id": {
+					"group": "gcloud",
+					"condition": assert_gcloud_project_id,
+				},
+				"aws_machine_type": {
+					"group": "aws",
+					"condition": assert_aws_machine_type,
+				},
+				"aws_compute_zone": {
+					"group": "aws",
+					"condition": assert_aws_compute_zone,
+				},
+				"aws_compute_project_id": {
+					"group": "aws",
+					"condition": assert_aws_project_id,
+				},
+			},
+			EXCEPTION_FUNCTION = custom_exception_function,
+			# Pass kwargs.
+
+			gcloud_machine_type = "gmt_1_INVALID",
+			gcloud_compute_zone = "gcz_1",
+			gcloud_project_id = "gpi_1",
+
+			foo = "a string",
+			bar = "a string",
+			baz = "a string",
+		),
+		"should": {
+			"ERROR": True,
+			"DATA": "Custom exception: Invalid param 'gcloud_machine_type': Invalid assert gcloud machine type.",
+		},
+		"group": "arg_groups",
 	},
 }
 
