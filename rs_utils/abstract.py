@@ -83,10 +83,11 @@ class RSObject(object):
 		stack_messages = repr_es[1:-1].split(">, <")
 		"""
 		Because this method is called by a method of an extended class of
-		this class, the first FrameSummary is always the module, so it's always
-		the second FrameSummary, so we need to fetch by the index (1)
+		this class, there are various FrameSummaries that we need to read depending
+		one the how the object is called, i.e. (as a object or through the fire cli).
+		The method in question is the fifth from the back (index -5).
 		"""
-		calling_frame_summary = stack_messages[1]
+		calling_frame_summary = stack_messages[-5]
 		"""
 		Finally, the method name is the last word at the end of the FrameSummary,
 		and since the FrameSummary is actually a string serialization, it's just

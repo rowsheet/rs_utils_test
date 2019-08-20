@@ -83,7 +83,35 @@ def assert_aws_project_id(val=None):
 		return
 	raise Exception("Invalid assert aws project id.")
 
+def validate_node_name(val=None):
+	if val[0:2] == "n_":
+		return
+	raise Exception("Invalid node_name")
 
+def validate_rs_node_name(val=None):
+	if val[0:3] == "rs_":
+		return
+	raise Exception("Invalid rs_node_name")
+
+def r_validate_node_name(val=None):
+	response = Response()
+	try:
+		validate_node_name(val=val)
+		return response
+	except Exception as ex:
+		response.ERROR = True
+		response.STDERR = str(ex)
+		return response
+
+def r_validate_rs_node_name(val=None):
+	response = Response()
+	try:
+		validate_rs_node_name(val=val)
+		return response
+	except Exception as ex:
+		response.ERROR = True
+		response.STDERR(str(ex))
+		return response
 """
 Define the test function.
 """
@@ -512,6 +540,138 @@ tests = {
 			"DATA": "Custom exception: Invalid param 'gcloud_machine_type': Invalid assert gcloud machine type.",
 		},
 		"group": "arg_groups",
+	},
+	"Arg groups (Valid, node, either)": {
+		"run": True,
+		"actual": lambda: run_validator(
+			ARG_CONFIG = {
+				"NODE_NAME": {
+					"group": "node",
+					"condition": validate_node_name,
+				},
+				"RS_NODE_NAME": {
+					"group": "rs_node",
+					"condition": validate_rs_node_name,
+				},
+			},
+			EXCEPTION_FUNCTION = custom_exception_function,
+			# Pass kwargs.
+			NODE_NAME="n_example_node"
+		),
+		"should": {
+			"ERROR": False,
+		},
+		"group": "arg_groups_either",
+	},
+	"Arg groups (Invalid, node, either)": {
+		"run": True,
+		"actual": lambda: run_validator(
+			ARG_CONFIG = {
+				"NODE_NAME": {
+					"group": "node",
+					"condition": validate_node_name,
+				},
+				"RS_NODE_NAME": {
+					"group": "rs_node",
+					"condition": validate_rs_node_name,
+				},
+			},
+			EXCEPTION_FUNCTION = custom_exception_function,
+			# Pass kwargs.
+			NODE_NAME="example_node"
+		),
+		"should": {
+			"ERROR": True,
+		},
+		"group": "arg_groups_either",
+	},
+	"Arg groups (Valid, rs_node, either)": {
+		"run": True,
+		"actual": lambda: run_validator(
+			ARG_CONFIG = {
+				"NODE_NAME": {
+					"group": "node",
+					"condition": validate_node_name,
+				},
+				"RS_NODE_NAME": {
+					"group": "rs_node",
+					"condition": validate_rs_node_name,
+				},
+			},
+			EXCEPTION_FUNCTION = custom_exception_function,
+			# Pass kwargs.
+			RS_NODE_NAME="rs_example_node"
+		),
+		"should": {
+			"ERROR": False,
+		},
+		"group": "arg_groups_either",
+	},
+	"Arg groups (Invalid, rs_node, either)": {
+		"run": True,
+		"actual": lambda: run_validator(
+			ARG_CONFIG = {
+				"NODE_NAME": {
+					"group": "node",
+					"condition": validate_node_name,
+				},
+				"RS_NODE_NAME": {
+					"group": "rs_node",
+					"condition": validate_rs_node_name,
+				},
+			},
+			EXCEPTION_FUNCTION = custom_exception_function,
+			# Pass kwargs.
+			RS_NODE_NAME="example_node"
+		),
+		"should": {
+			"ERROR": True,
+		},
+		"group": "arg_groups_either",
+	},
+	"Arg groups (Valid, node, either, response)": {
+		"run": True,
+		"actual": lambda: run_validator(
+			ARG_CONFIG = {
+				"NODE_NAME": {
+					"group": "node",
+					"condition": r_validate_node_name,
+				},
+				"RS_NODE_NAME": {
+					"group": "rs_node",
+					"condition": r_validate_rs_node_name,
+				},
+			},
+			EXCEPTION_FUNCTION = custom_exception_function,
+			# Pass kwargs.
+			NODE_NAME="n_example_node"
+		),
+		"should": {
+			"ERROR": False,
+		},
+		"group": "response_arg_groups_either",
+	},
+	"Arg groups (Invalid, node, either, response)": {
+		"run": True,
+		"actual": lambda: run_validator(
+			ARG_CONFIG = {
+				"NODE_NAME": {
+					"group": "node",
+					"condition": r_validate_node_name,
+				},
+				"RS_NODE_NAME": {
+					"group": "rs_node",
+					"condition": r_validate_rs_node_name,
+				},
+			},
+			EXCEPTION_FUNCTION = custom_exception_function,
+			# Pass kwargs.
+			NODE_NAME="example_node"
+		),
+		"should": {
+			"ERROR": True,
+		},
+		"group": "response_arg_groups_either",
 	},
 }
 
