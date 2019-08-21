@@ -1,6 +1,7 @@
 from rs_utils import logger
 from rs_utils.response import Response 
 from subprocess import PIPE, Popen
+from multiprocessing import Pool
 
 def step(cmd, msg=None, **kwargs):
 	#-----------------------------------------------------------------------
@@ -121,6 +122,103 @@ def step(cmd, msg=None, **kwargs):
 		#	error => False 
 		response.ERROR = False
 	return response
+
+def _validate_timeout_step_response(name, response):
+        if type(response).__name__ != "Response":
+                raise Exception(
+                        (
+                                """%s returned a non Response type object """ +
+                                """of type '%s'"""
+                        ) % (
+                                name,
+                                type(response).__name__
+                        )
+                )
+
+def timeout_step(
+	PRIMARY_PROCESS=None,
+	TIMEOUT_PROCESS=None,
+	PRIMARY_PROCESS_ARGS={},
+	TIMEOUT_PROCESS_ARGS={},
+	PRIMARY_PROCESS_TIMEOUT=30,
+	TIMEOUT_PROCESS_TIMEOUT=60):
+
+	response = Response()
+	try:
+
+		"""-------------------------------------------------------------
+		Validate args.
+		Make sure PRIMARY_PROCESS and TIMEOUT_PROCESS are defined and
+		are either methods of functions.
+		-------------------------------------------------------------"""
+		errors = []
+		if PRIMARY_PROCESS is None:
+			errors.append("PRIMARY_PROCESS must be a function.")
+		if (
+			(type(PRIMARY_PROCESS).__name__ != "function") and
+			(type(PRIMARY_PROCESS).__name__ != "method")):
+			errors.append("PRIMARY_PROCESS must be a function.")
+		if TIMEOUT_PROCESS is None:
+			errors.append("TIMEOUT_PROCESS must be a function.")
+		if (
+			(type(TIMEOUT_PROCESS).__name__ != "function") and
+			(type(TIMEOUT_PROCESS).__name__ != "method")):
+			errors.append("TIMEOUT_PROCESSmust be a function.")
+		if len(errors) > 0:
+			raise Exception(
+				"Invalid timeout_step usage: " +
+				". ".join(errors)
+			)
+		"""-------------------------------------------------------------
+		Set a pool of async functions of size 2 for both:
+			1) PRIMARY_PROCESS
+			2) TIMEOUT_PROCESS
+		Try to run the primary process and return the response, until
+		the timeout. If the primary timeout occurs, do the same with
+		the timeout process.
+		Make sure response are rs_utils.response.Response() objects.
+		-------------------------------------------------------------"""
+		with Pool(processes=2) as pool:
+			primary_process = pool.apply_async(
+				PRIMARY_PROCESS,
+				kwds=PRIMARY_PROCESS_ARGS,
+			)
+			try:
+				primary_response = primary_process.get(
+					timeout=PRIMARY_PROCESS_TIMEOUT
+				)
+				_validate_timeout_step_response(
+					"PRIMARY_PROCESS",
+					primary_response,
+				)
+				return primary_response
+			except Exception as ex:
+				logger.error("TIMEOUT:")
+				logger.error(str(ex))
+				"""---------------------------------------------
+				If it's a timeout exception, the str(ex) == "",
+				otherwise it's another underlying exception that
+				needs to be bubbled up.
+				---------------------------------------------"""
+				if str(ex) == "":
+					timeout_process = pool.apply_async(
+						TIMEOUT_PROCESS,
+						kwds=TIMEOUT_PROCESS_ARGS,
+					)
+					timeout_response = timeout_process.get(
+						timeout=TIMEOUT_PROCESS_TIMEOUT
+					)
+					_validate_timeout_step_response(
+						"TIMEOUT_RESPONSE",
+						timeout_response,
+					)
+					return timeout_response
+				else:
+					raise Exception(str(ex))
+	except Exception as ex:
+		response.ERROR = True
+		response.STDERR = str(ex)
+		return response
 
 #-------------------------------------------------------------------------------
 # Unit tests.
